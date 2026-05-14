@@ -9,6 +9,7 @@ import Products from '../pages/Products';
 import ProductDetails from '../pages/ProductDetails';
 import Cart from '../pages/Cart';
 import Checkout from '../pages/Checkout';
+import OrderConfirmation from '../pages/OrderConfirmation';
 import Farmers from '../pages/Farmers';
 import FarmerProfile from '../pages/FarmerProfile';
 import AgriInsights from '../pages/AgriInsights';
@@ -56,8 +57,9 @@ const AppRoutes = () => {
         <Route path="/login" element={<PageWrapper><Login /></PageWrapper>} />
         <Route path="/register" element={<PageWrapper><Register /></PageWrapper>} />
 
-        <Route path="/checkout" element={<ProtectedRoute role="customer"><PageWrapper><Checkout /></PageWrapper></ProtectedRoute>} />
-        <Route path="/customer/dashboard" element={<ProtectedRoute role="customer"><PageWrapper><CustomerDashboard /></PageWrapper></ProtectedRoute>} />
+        <Route path="/checkout" element={<ProtectedRoute><PageWrapper><Checkout /></PageWrapper></ProtectedRoute>} />
+        <Route path="/order-confirmation" element={<ProtectedRoute><PageWrapper><OrderConfirmation /></PageWrapper></ProtectedRoute>} />
+        <Route path="/customer/dashboard" element={<ProtectedRoute><PageWrapper><CustomerDashboard /></PageWrapper></ProtectedRoute>} />
         <Route path="/farmer/dashboard" element={<ProtectedRoute role="farmer"><PageWrapper><FarmerDashboard /></PageWrapper></ProtectedRoute>} />
 
         <Route path="*" element={<Navigate to="/" replace />} />

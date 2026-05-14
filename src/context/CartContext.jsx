@@ -22,28 +22,30 @@ export const CartProvider = ({ children }) => {
   };
 
   const addToCart = (product, quantity = 1) => {
+    // Support both _id (MongoDB) and id (local)
+    const pid = product._id || product.id;
     setCart(prev => {
-      const existing = prev.find(item => item.id === product.id);
+      const existing = prev.find(item => (item._id || item.id) === pid);
       if (existing) {
-        return prev.map(item => item.id === product.id 
-          ? { ...item, quantity: item.quantity + quantity } 
-          : item
+        return prev.map(item =>
+          (item._id || item.id) === pid
+            ? { ...item, quantity: item.quantity + quantity }
+            : item
         );
       }
-      return [...prev, { ...product, quantity }];
+      return [...prev, { ...product, id: pid, quantity }];
     });
     showToast(`Added ${product.name} to cart`);
   };
 
   const removeFromCart = (id) => {
-    setCart(prev => prev.filter(item => item.id !== id));
+    setCart(prev => prev.filter(item => (item._id || item.id) !== id));
   };
 
-  const updateQuantity = (id, delta) => {
+  const updateQuantity = (id, newQty) => {
     setCart(prev => prev.map(item => {
-      if (item.id === id) {
-        const newQty = Math.max(1, item.quantity + delta);
-        return { ...item, quantity: newQty };
+      if (item.id === id || item._id === id) {
+        return { ...item, quantity: Math.max(1, newQty) };
       }
       return item;
     }));

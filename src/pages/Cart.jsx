@@ -14,9 +14,11 @@ import {
   TrendingDown
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 
 const Cart = () => {
   const { cart, removeFromCart, updateQuantity, cartTotal } = useCart();
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   // Standard Flipkart-style calculation
@@ -100,7 +102,7 @@ const Cart = () => {
                    {/* Place Order Button Container */}
                    <div className="p-4 bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.05)] sticky bottom-0 z-10 flex justify-end">
                       <button 
-                        onClick={() => navigate('/checkout')}
+                        onClick={() => isAuthenticated ? navigate('/checkout') : navigate('/login', { state: { from: '/checkout' } })}
                         className="bg-[#fb641b] text-white px-16 py-4 rounded-sm font-bold uppercase shadow-lg hover:bg-[#e65a16] transition-all"
                       >
                         Place Order
@@ -168,3 +170,4 @@ const Cart = () => {
 };
 
 export default Cart;
+
