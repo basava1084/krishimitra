@@ -16,6 +16,7 @@ const { socketHandler } = require('./sockets/socketHandler');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const chatRoutes = require('./routes/chatRoutes');
+const productRoutes = require('./routes/productRoutes');
 
 // Initialize Express
 const app = express();
@@ -64,6 +65,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/chat', chatRoutes);
+app.use('/api/v1/products', productRoutes);
 
 // Health Check
 app.get('/api/v1/health', (req, res) => {
