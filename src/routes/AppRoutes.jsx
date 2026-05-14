@@ -1,5 +1,6 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import ProtectedRoute from './ProtectedRoute';
 
 // Pages
@@ -10,6 +11,8 @@ import Cart from '../pages/Cart';
 import Checkout from '../pages/Checkout';
 import Farmers from '../pages/Farmers';
 import FarmerProfile from '../pages/FarmerProfile';
+import AgriInsights from '../pages/AgriInsights';
+import ChatPage from '../pages/ChatPage';
 
 // Auth
 import Login from '../pages/auth/Login';
@@ -19,25 +22,47 @@ import Register from '../pages/auth/Register';
 import CustomerDashboard from '../pages/dashboard/customer/CustomerDashboard';
 import FarmerDashboard from '../pages/dashboard/farmer/FarmerDashboard';
 
-const AppRoutes = () => {
+// Page Transition Wrapper
+const PageWrapper = ({ children }) => {
   return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/products" element={<Products />} />
-      <Route path="/product/:id" element={<ProductDetails />} />
-      <Route path="/cart" element={<Cart />} />
-      <Route path="/farmers" element={<Farmers />} />
-      <Route path="/farmers/:id" element={<FarmerProfile />} />
-      
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
+    <motion.div
+      initial={{ opacity: 0, filter: 'blur(10px)' }}
+      animate={{ opacity: 1, filter: 'blur(0px)' }}
+      exit={{ opacity: 0, filter: 'blur(10px)' }}
+      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+      className="min-h-screen"
+    >
+      {children}
+    </motion.div>
+  );
+};
 
-      <Route path="/checkout" element={<ProtectedRoute role="customer"><Checkout /></ProtectedRoute>} />
-      <Route path="/customer/dashboard" element={<ProtectedRoute role="customer"><CustomerDashboard /></ProtectedRoute>} />
-      <Route path="/farmer/dashboard" element={<ProtectedRoute role="farmer"><FarmerDashboard /></ProtectedRoute>} />
+const AppRoutes = () => {
+  const location = useLocation();
 
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/" element={<PageWrapper><Home /></PageWrapper>} />
+        <Route path="/products" element={<PageWrapper><Products /></PageWrapper>} />
+        <Route path="/products/:id" element={<PageWrapper><ProductDetails /></PageWrapper>} />
+        <Route path="/cart" element={<PageWrapper><Cart /></PageWrapper>} />
+        <Route path="/farmers" element={<PageWrapper><Farmers /></PageWrapper>} />
+        <Route path="/farmers/:id" element={<PageWrapper><FarmerProfile /></PageWrapper>} />
+        <Route path="/agri-insights" element={<PageWrapper><AgriInsights /></PageWrapper>} />
+        <Route path="/chat" element={<ProtectedRoute><PageWrapper><ChatPage /></PageWrapper></ProtectedRoute>} />
+        <Route path="/chat/:recipientId" element={<ProtectedRoute><PageWrapper><ChatPage /></PageWrapper></ProtectedRoute>} />
+
+        <Route path="/login" element={<PageWrapper><Login /></PageWrapper>} />
+        <Route path="/register" element={<PageWrapper><Register /></PageWrapper>} />
+
+        <Route path="/checkout" element={<ProtectedRoute role="customer"><PageWrapper><Checkout /></PageWrapper></ProtectedRoute>} />
+        <Route path="/customer/dashboard" element={<ProtectedRoute role="customer"><PageWrapper><CustomerDashboard /></PageWrapper></ProtectedRoute>} />
+        <Route path="/farmer/dashboard" element={<ProtectedRoute role="farmer"><PageWrapper><FarmerDashboard /></PageWrapper></ProtectedRoute>} />
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </AnimatePresence>
   );
 };
 

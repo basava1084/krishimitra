@@ -1,207 +1,273 @@
-import React, { useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { 
-  ShoppingBag, 
-  MapPin, 
-  Heart, 
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  ShoppingBag,
+  Heart,
+  MapPin,
   ChevronRight,
+  Settings,
+  LogOut,
+  Star,
+  ShieldCheck,
+  Bell,
+  Search,
+  LayoutDashboard,
+  User,
+  MessageCircle,
+  X,
+  CreditCard,
   Package,
   Truck,
-  CheckCircle2,
-  ShieldCheck,
-  Star,
-  Search,
-  Sprout,
-  RefreshCw,
-  Plus,
-  X
+  RotateCcw,
+  Trash2,
+  Mail,
+  Phone,
+  Camera
 } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { useOrders } from '../../../context/OrderContext';
-import { useCart } from '../../../context/CartContext';
-import Table from '../../../components/Table';
-import AddProductForm from '../../../components/AddProductForm';
 
 const CustomerDashboard = () => {
-  const { currentUser } = useAuth();
-  const { getCustomerOrders } = useOrders();
-  const { reorderItems } = useCart();
+  const { currentUser, logout } = useAuth();
+  const { orders, cancelOrder } = useOrders();
   const navigate = useNavigate();
-  const [showAddModal, setShowAddModal] = useState(false);
+  const [activeTab, setActiveTab] = useState('orders');
 
-  const myOrders = useMemo(() => getCustomerOrders(currentUser?.id), [currentUser, getCustomerOrders]);
-  const activeOrder = useMemo(() => myOrders.find(o => o.status !== 'delivered'), [myOrders]);
-  const totalSpent = useMemo(() => myOrders.reduce((acc, o) => acc + o.totalAmount, 0), [myOrders]);
-
-  const handleReorder = (order) => {
-    reorderItems(order.items);
-    navigate('/cart');
-  };
+  const menuItems = [
+    { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+    { id: 'orders', label: 'My Orders', icon: ShoppingBag },
+    { id: 'wishlist', label: 'My Wishlist', icon: Heart },
+    { id: 'profile', label: 'My Profile', icon: User },
+    { id: 'settings', label: 'Settings', icon: Settings },
+  ];
 
   return (
-    <div className="bg-background min-h-screen pb-24">
-      {/* Hero Header */}
-      <div className="bg-white border-b border-gray-100 overflow-hidden relative shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 relative z-10">
-           <div className="flex flex-col md:flex-row justify-between items-center gap-12">
-              <div className="space-y-6 text-center md:text-left">
-                 <div className="flex items-center justify-center md:justify-start gap-4">
-                    <div className="w-16 h-16 rounded-full overflow-hidden border-4 border-primary/20 shadow-xl">
-                       <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser?.name}`} alt={currentUser?.name} />
-                    </div>
-                    <div>
-                       <p className="text-[10px] font-black text-primary uppercase tracking-widest">Premium Agri Member</p>
-                       <h1 className="text-4xl font-black text-gray-900 tracking-tight leading-tight uppercase">Hello, {currentUser?.name.split(' ')[0]}!</h1>
-                    </div>
-                 </div>
-                 <p className="text-gray-500 font-medium max-w-md mx-auto md:mx-0 leading-relaxed">
-                   Currently tracking <span className="text-primary font-black underline decoration-primary/20 decoration-4 underline-offset-4">{myOrders.length} local harvest orders</span>.
-                 </p>
-                 <div className="flex gap-4 justify-center md:justify-start pt-2">
-                    <Link to="/products" className="btn-primary py-4 px-10 rounded-xl shadow-xl shadow-primary/20 text-sm font-black uppercase tracking-widest">
-                       Explore Harvest <Search className="w-4 h-4" />
-                    </Link>
-                    <button 
-                      onClick={() => setShowAddModal(true)}
-                      className="btn-secondary py-4 px-10 rounded-xl shadow-sm text-sm font-black uppercase tracking-widest flex items-center gap-2"
-                    >
-                       List Item <Plus className="w-4 h-4" />
-                    </button>
-                 </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-6 w-full md:w-auto">
-                 <div className="bg-gray-50 p-8 rounded-2xl border border-gray-100 text-center space-y-2 group hover:bg-white transition-all hover:shadow-xl">
-                    <p className="text-4xl font-black text-gray-900 tracking-tighter">{myOrders.filter(o => o.status !== 'delivered').length}</p>
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Active Orders</p>
-                 </div>
-                 <div className="bg-gray-50 p-8 rounded-2xl border border-gray-100 text-center space-y-2 group hover:bg-white transition-all hover:shadow-xl">
-                    <p className="text-4xl font-black text-gray-900 tracking-tighter">₹{totalSpent}</p>
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total Impact</p>
-                 </div>
-              </div>
-           </div>
+    <div className="bg-[#f1f3f6] min-h-screen flex font-body text-text-main pt-24">
+      
+      {/* Standard Flipkart-style Sidebar */}
+      <aside className="w-72 flex flex-col fixed h-screen z-[90] pt-28 px-4">
+        <div className="bg-white shadow-sm rounded-sm overflow-hidden mb-4 p-4 flex items-center gap-4">
+          <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser?.name}`} className="w-12 h-12 rounded-full bg-surface" alt="Avatar" />
+          <div>
+            <p className="text-[10px] text-text-dim uppercase tracking-widest font-bold">Hello,</p>
+            <p className="text-sm font-bold text-primary truncate max-w-[120px]">{currentUser?.name}</p>
+          </div>
         </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
-        <div className="grid lg:grid-cols-3 gap-12">
-           <div className="lg:col-span-2 space-y-12">
-              <div className="bg-white rounded-2xl border border-gray-200 shadow-xl overflow-hidden p-10 space-y-12">
-                 <div className="flex justify-between items-center pb-6 border-b border-gray-50">
-                    <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest">Real-time Harvest Tracker</h3>
-                    {activeOrder && <span className="text-[10px] font-black text-primary bg-primary/10 px-4 py-1.5 rounded-full uppercase tracking-widest">Order #{activeOrder.id}</span>}
-                 </div>
-                 
-                 {activeOrder ? (
-                   <div className="relative pt-6">
-                      <div className="absolute top-1/2 left-0 w-full h-0.5 bg-gray-50 -translate-y-1/2 -z-10 rounded-full"></div>
-                      <div className={`absolute top-1/2 left-0 h-1 bg-primary -translate-y-1/2 -z-10 rounded-full shadow-sm transition-all duration-1000 ${
-                        activeOrder.status === 'placed' ? 'w-1/4' : 
-                        activeOrder.status === 'accepted' ? 'w-1/2' :
-                        activeOrder.status === 'packed' ? 'w-2/3' :
-                        activeOrder.status === 'out_for_delivery' ? 'w-[90%]' : 'w-full'
-                      }`}></div>
-                      
-                      <div className="flex justify-between relative z-10">
-                        {[
-                          { label: 'Placed', icon: CheckCircle2, active: true },
-                          { label: 'Accepted', icon: Sprout, active: ['accepted', 'packed', 'out_for_delivery', 'delivered'].includes(activeOrder.status) },
-                          { label: 'En Route', icon: Truck, active: ['out_for_delivery', 'delivered'].includes(activeOrder.status) },
-                          { label: 'Delivered', icon: Package, active: activeOrder.status === 'delivered' }
-                        ].map((step, i) => (
-                          <div key={i} className="flex flex-col items-center gap-4">
-                             <div className={`w-12 h-12 rounded-full flex items-center justify-center border-4 transition-all duration-500 ${step.active ? 'bg-primary border-primary shadow-xl shadow-primary/30 text-white scale-110' : 'bg-white border-gray-50 text-gray-200 shadow-inner'}`}>
-                                <step.icon className="w-6 h-6" />
-                             </div>
-                             <span className={`text-[10px] font-black uppercase tracking-tighter ${step.active ? 'text-gray-900' : 'text-gray-300'}`}>{step.label}</span>
-                          </div>
-                        ))}
-                      </div>
-                   </div>
-                 ) : (
-                   <div className="py-20 text-center space-y-6">
-                      <ShoppingBag className="w-16 h-16 text-gray-100 mx-auto" />
-                      <p className="text-gray-400 font-bold uppercase text-[10px] tracking-widest">No active orders to track.</p>
-                      <Link to="/products" className="text-sm font-black text-primary hover:underline underline-offset-8 uppercase">Start shopping fresh harvest</Link>
-                   </div>
-                 )}
-              </div>
+        <nav className="bg-white shadow-sm rounded-sm overflow-hidden py-2">
+           <div className="px-6 py-4 border-b border-black/5 flex items-center gap-4 text-primary opacity-40">
+              <User className="w-5 h-5" />
+              <span className="text-[11px] font-bold uppercase tracking-widest">Account Settings</span>
+           </div>
+           
+           <div className="py-2">
+              {menuItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`w-full flex items-center gap-4 px-12 py-3.5 transition-all duration-300 group ${
+                    activeTab === item.id 
+                      ? 'bg-blue-50/50 text-primary font-bold' 
+                      : 'text-text-dim hover:bg-surface hover:text-primary'
+                  }`}
+                >
+                  <item.icon className={`w-4 h-4 ${activeTab === item.id ? 'text-primary' : 'text-primary/40'}`} />
+                  <span className="text-[11px] uppercase tracking-widest">{item.label}</span>
+                </button>
+              ))}
+           </div>
 
-              <Table 
-                title="Your Harvest History" 
-                headers={['Order ID', 'Date', 'Amount', 'Status', 'Actions']}
+           <div className="border-t border-black/5 mt-2 py-2">
+              <button
+                onClick={logout}
+                className="w-full flex items-center gap-4 px-12 py-3.5 text-red-500 hover:bg-red-50 transition-all duration-300"
               >
-                {myOrders.map((o) => (
-                  <tr key={o.id} className="hover:bg-gray-50/50 transition-colors group">
-                    <td className="px-6 py-6 font-black text-gray-900 uppercase tracking-tighter">{o.id}</td>
-                    <td className="px-6 py-6 text-gray-500 font-bold text-xs">{new Date(o.createdAt).toLocaleDateString()}</td>
-                    <td className="px-6 py-6 font-black text-gray-900 tracking-tighter">₹{o.totalAmount}</td>
-                    <td className="px-6 py-6">
-                       <span className={`badge ${o.status === 'delivered' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
-                          {o.status}
-                       </span>
-                    </td>
-                    <td className="px-6 py-6">
-                       <button 
-                        onClick={() => handleReorder(o)}
-                        className="flex items-center gap-2 text-[10px] font-black text-primary uppercase border border-primary/20 px-3 py-1.5 rounded hover:bg-primary hover:text-white transition-all shadow-sm"
-                       >
-                          <RefreshCw className="w-3 h-3" /> Reorder
-                       </button>
-                    </td>
-                  </tr>
-                ))}
-                {myOrders.length === 0 && (
-                   <tr>
-                     <td colSpan="5" className="px-6 py-16 text-center text-gray-300 italic font-bold">You haven't supported any farmers yet.</td>
-                   </tr>
-                )}
-              </Table>
+                <LogOut className="w-4 h-4" />
+                <span className="text-[11px] font-bold uppercase tracking-widest">Logout</span>
+              </button>
            </div>
+        </nav>
+      </aside>
 
-           <div className="space-y-8">
-              <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm space-y-8">
-                 <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest border-b border-gray-50 pb-4">Personal Fresh Tools</h3>
-                 <div className="space-y-4">
-                    <button className="w-full flex items-center justify-between p-5 rounded-2xl bg-gray-50 hover:bg-primary/5 border border-transparent hover:border-primary/20 transition-all group">
-                       <div className="flex items-center gap-4">
-                          <MapPin className="w-5 h-5 text-gray-400 group-hover:text-primary" />
-                          <span className="text-sm font-bold text-gray-700 group-hover:text-gray-900 uppercase tracking-tight">Saved Addresses</span>
-                       </div>
-                       <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-primary" />
-                    </button>
-                    <button className="w-full flex items-center justify-between p-5 rounded-2xl bg-gray-50 hover:bg-primary/5 border border-transparent hover:border-primary/20 transition-all group">
-                       <div className="flex items-center gap-4">
-                          <Heart className="w-5 h-5 text-gray-400 group-hover:text-primary" />
-                          <span className="text-sm font-bold text-gray-700 group-hover:text-gray-900 uppercase tracking-tight">Favorite Farms</span>
-                       </div>
-                       <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-primary" />
-                    </button>
-                 </div>
-              </div>
-           </div>
-        </div>
-      </div>
+      {/* Main Content Area */}
+      <main className="flex-1 ml-72 p-8 pt-28">
+        <div className="max-w-5xl mx-auto space-y-6">
+          
+          <AnimatePresence mode="wait">
+            {activeTab === 'orders' && (
+              <motion.div key="orders" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4">
+                {/* Order Search & Filter */}
+                <div className="bg-white p-4 shadow-sm rounded-sm flex flex-col md:flex-row gap-4 items-center justify-between">
+                  <div className="relative w-full md:w-2/3">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-dim/40" />
+                    <input 
+                      type="text" 
+                      placeholder="Search your orders here" 
+                      className="w-full bg-white border border-black/10 px-12 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                  </div>
+                  <button className="bg-primary text-white px-8 py-2.5 text-[10px] font-bold uppercase tracking-widest rounded-sm shadow-md">Search</button>
+                </div>
 
-      {/* Add Product Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowAddModal(false)}></div>
-           <div className="relative bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in duration-300">
-              <div className="bg-primary p-6 text-white flex justify-between items-center">
-                 <div>
-                    <h2 className="text-xl font-black uppercase tracking-tight">List Your Product</h2>
-                    <p className="text-xs text-primary-100 font-bold uppercase tracking-widest opacity-80">Sell directly to other community members</p>
+                <div className="space-y-4">
+                  {orders.length > 0 ? (
+                    orders.map((order) => (
+                      <div key={order.id} className="bg-white p-6 shadow-sm rounded-sm border border-black/5 flex flex-col md:flex-row gap-6 relative group">
+                         {/* Product Info */}
+                         <div className="flex gap-6 flex-1">
+                            <div className="w-20 h-20 bg-surface rounded p-1 shrink-0">
+                               <img src={order.items?.[0]?.image || '/images/default-product.png'} className="w-full h-full object-contain" alt="" />
+                            </div>
+                            <div className="space-y-1">
+                               <h4 className="text-sm font-bold text-primary">{order.items?.[0]?.name || 'KrishiMitra Product'}</h4>
+                               <p className="text-[10px] text-text-dim uppercase tracking-widest">Seller: {order.items?.[0]?.sellerName || 'Verified Farmer'}</p>
+                               <div className="flex items-center gap-2 mt-4">
+                                  <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                                  <span className="text-xs font-bold">Ordered on {new Date(order.createdAt).toLocaleDateString()}</span>
+                               </div>
+                            </div>
+                         </div>
+
+                         {/* Price */}
+                         <div className="md:w-32">
+                            <p className="text-sm font-bold text-primary">₹{order.total}</p>
+                         </div>
+
+                         {/* Status & Actions */}
+                         <div className="md:w-64 space-y-4">
+                            <div className="flex items-center gap-1">
+                               <Star className="w-4 h-4 text-blue-600" />
+                               <span className="text-xs font-bold text-blue-600 hover:underline cursor-pointer">Rate & Review Product</span>
+                            </div>
+                            <button 
+                              onClick={() => cancelOrder(order.id)}
+                              className="flex items-center gap-2 text-red-500 text-[10px] font-bold uppercase tracking-widest hover:bg-red-50 px-3 py-1.5 rounded transition-all"
+                            >
+                               <Trash2 className="w-3.5 h-3.5" /> Cancel Order
+                            </button>
+                         </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="bg-white py-20 text-center space-y-6 shadow-sm rounded-sm">
+                      <ShoppingBag className="w-16 h-16 text-primary/10 mx-auto" />
+                      <p className="text-sm text-text-dim">You have no orders. Start exploring!</p>
+                      <Link to="/products" className="inline-block bg-primary text-white px-12 py-3 rounded-sm font-bold uppercase shadow-md">Marketplace</Link>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+
+            {activeTab === 'overview' && (
+              <motion.div key="overview" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                 <div className="md:col-span-2 space-y-6">
+                    <div className="bg-white p-8 shadow-sm rounded-sm border border-black/5">
+                       <h3 className="text-xl font-display font-bold text-primary uppercase tracking-tight mb-6">Recent Activity</h3>
+                       <div className="space-y-4">
+                          <div className="flex items-center gap-4 p-4 bg-surface/50 rounded-xl">
+                             <Truck className="w-5 h-5 text-primary" />
+                             <div>
+                                <p className="text-xs font-bold">Orders are being processed</p>
+                                <p className="text-[10px] text-text-dim uppercase tracking-widest">Checking inventory status</p>
+                             </div>
+                          </div>
+                       </div>
+                    </div>
                  </div>
-                 <button onClick={() => setShowAddModal(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X className="w-6 h-6" /></button>
-              </div>
-              <div className="p-10 max-h-[80vh] overflow-y-auto">
-                 <AddProductForm onSuccess={() => setShowAddModal(false)} />
-              </div>
-           </div>
+                 <div className="bg-white p-6 shadow-sm rounded-sm border border-black/5">
+                    <h4 className="text-sm font-bold text-primary uppercase tracking-widest mb-4">Loyalty Points</h4>
+                    <div className="text-3xl font-display font-bold text-primary">1,240</div>
+                    <p className="text-[10px] text-text-dim uppercase tracking-widest mt-1">Available to redeem</p>
+                 </div>
+              </motion.div>
+            )}
+
+            {activeTab === 'wishlist' && (
+              <motion.div key="wishlist" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="bg-white shadow-sm rounded-sm overflow-hidden">
+                 <div className="px-8 py-6 border-b border-black/5">
+                    <h2 className="text-lg font-bold text-primary uppercase">My Wishlist (0)</h2>
+                 </div>
+                 <div className="py-20 text-center space-y-6">
+                    <Heart className="w-16 h-16 text-primary/10 mx-auto" />
+                    <p className="text-sm text-text-dim">Your wishlist is empty!</p>
+                 </div>
+              </motion.div>
+            )}
+
+            {activeTab === 'profile' && (
+              <motion.div key="profile" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="bg-white shadow-sm rounded-sm overflow-hidden">
+                 <div className="px-8 py-6 border-b border-black/5">
+                    <h2 className="text-lg font-bold text-primary uppercase">Personal Information</h2>
+                 </div>
+                 <div className="p-8 space-y-10">
+                    <div className="flex items-center gap-8">
+                       <div className="relative group">
+                          <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser?.name}`} className="w-32 h-32 rounded-2xl bg-surface border border-black/5" alt="" />
+                          <button className="absolute inset-0 bg-black/40 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl">
+                             <Camera className="w-6 h-6" />
+                          </button>
+                       </div>
+                       <div className="space-y-4 flex-1">
+                          <div className="grid grid-cols-2 gap-6">
+                             <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-text-dim uppercase">First Name</label>
+                                <input type="text" className="w-full bg-surface border border-black/5 p-3 rounded text-sm" defaultValue={currentUser?.name?.split(' ')[0]} />
+                             </div>
+                             <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-text-dim uppercase">Last Name</label>
+                                <input type="text" className="w-full bg-surface border border-black/5 p-3 rounded text-sm" defaultValue={currentUser?.name?.split(' ')[1] || ''} />
+                             </div>
+                          </div>
+                       </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-6">
+                       <div className="space-y-2">
+                          <label className="text-[10px] font-bold text-text-dim uppercase">Email Address</label>
+                          <input type="email" className="w-full bg-surface border border-black/5 p-3 rounded text-sm" defaultValue={currentUser?.email} disabled />
+                       </div>
+                       <div className="space-y-2">
+                          <label className="text-[10px] font-bold text-text-dim uppercase">Mobile Number</label>
+                          <input type="tel" className="w-full bg-surface border border-black/5 p-3 rounded text-sm" defaultValue="+91 7411278970" />
+                       </div>
+                    </div>
+                    <button className="bg-primary text-white px-12 py-3 rounded-sm font-bold uppercase tracking-widest text-[10px] shadow-lg">Save Profile</button>
+                 </div>
+              </motion.div>
+            )}
+
+            {activeTab === 'settings' && (
+              <motion.div key="settings" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="bg-white shadow-sm rounded-sm overflow-hidden">
+                 <div className="px-8 py-6 border-b border-black/5">
+                    <h2 className="text-lg font-bold text-primary uppercase">Account Settings</h2>
+                 </div>
+                 <div className="p-8 space-y-6">
+                    <div className="flex items-center justify-between p-4 bg-surface rounded-xl">
+                       <div>
+                          <p className="text-sm font-bold">Email Notifications</p>
+                          <p className="text-xs text-text-dim">Receive updates about your orders</p>
+                       </div>
+                       <div className="w-12 h-6 bg-primary rounded-full relative">
+                          <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full"></div>
+                       </div>
+                    </div>
+                    <div className="flex items-center justify-between p-4 bg-surface rounded-xl">
+                       <div>
+                          <p className="text-sm font-bold">SMS Alerts</p>
+                          <p className="text-xs text-text-dim">Get real-time tracking via SMS</p>
+                       </div>
+                       <div className="w-12 h-6 bg-black/10 rounded-full relative">
+                          <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full"></div>
+                       </div>
+                    </div>
+                 </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
         </div>
-      )}
+      </main>
     </div>
   );
 };

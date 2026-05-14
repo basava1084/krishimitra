@@ -38,8 +38,12 @@ export const OrderProvider = ({ children }) => {
     return orders.filter(o => o.items.some(item => item.farmerId === farmerId));
   };
 
+  const cancelOrder = (orderId) => {
+    setOrders(prev => prev.filter(o => o.id !== orderId));
+  };
+
   return (
-    <OrderContext.Provider value={{ orders, placeOrder, updateOrderStatus, getCustomerOrders, getFarmerOrders }}>
+    <OrderContext.Provider value={{ orders, placeOrder, updateOrderStatus, getCustomerOrders, getFarmerOrders, cancelOrder }}>
       {children}
     </OrderContext.Provider>
   );

@@ -4,6 +4,7 @@ import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { ProductProvider } from './context/ProductContext';
 import { OrderProvider } from './context/OrderContext';
+import { ChatProvider } from './context/ChatContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import AppRoutes from './routes/AppRoutes';
@@ -13,17 +14,19 @@ function App() {
     <AuthProvider>
       <ProductProvider>
         <OrderProvider>
-          <CartProvider>
-            <Router>
-              <div className="flex flex-col min-h-screen">
-                <Navbar />
-                <main className="flex-grow">
-                  <AppRoutes />
-                </main>
-                <Footer />
-              </div>
-            </Router>
-          </CartProvider>
+          <ChatProvider>
+            <CartProvider>
+              <Router>
+                <div className="flex flex-col min-h-screen">
+                  <Navbar />
+                  <main className="flex-grow">
+                    <AppRoutes />
+                  </main>
+                  <Footer />
+                </div>
+              </Router>
+            </CartProvider>
+          </ChatProvider>
         </OrderProvider>
       </ProductProvider>
     </AuthProvider>

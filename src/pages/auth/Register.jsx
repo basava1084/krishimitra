@@ -1,59 +1,65 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Mail, Lock, User, Phone, MapPin, Tag, Sprout, ArrowRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  User, 
+  Mail, 
+  Lock, 
+  UserPlus, 
+  ShieldCheck, 
+  Sparkles, 
+  ArrowRight, 
+  UserCircle, 
+  Leaf,
+  Phone,
+  MapPin,
+  Briefcase,
+  Sprout,
+  Compass,
+  ArrowLeft,
+  Zap,
+  Globe,
+  Database,
+  Star,
+  Activity
+} from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const Register = () => {
-  const location = useLocation();
-  const [role, setRole] = useState(location.state?.defaultRole || 'customer');
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  
-  const { register } = useAuth();
-  const navigate = useNavigate();
-
-  // Unified form state
+  const [role, setRole] = useState('customer'); // customer or farmer
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     password: '',
     confirmPassword: '',
-    farmLocation: '',
-    farmingType: 'Organic',
-    farmDescription: ''
+    // Farmer specific
+    farmingType: '',
+    location: '',
+    experience: '',
+    address: ''
   });
+  
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { register } = useAuth();
+  const navigate = useNavigate();
 
-  const handleChange = (e) => {
+  const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Reset farmer-specific fields when switching to customer
-  useEffect(() => {
-    if (role === 'customer') {
-      setFormData(prev => ({
-        ...prev,
-        farmLocation: '',
-        farmingType: 'Organic',
-        farmDescription: ''
-      }));
-    }
-  }, [role]);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-
     if (formData.password !== formData.confirmPassword) {
-      return setError('Passwords do not match');
+      return setError('Passwords do not match.');
     }
-
-    setIsLoading(true);
-
+    
     try {
-      await new Promise(resolve => setTimeout(resolve, 600));
-
-      const userData = {
+      setError('');
+      setLoading(true);
+      
+      const submissionData = {
         name: formData.name,
         email: formData.email,
         phone: formData.phone,
@@ -62,165 +68,250 @@ const Register = () => {
       };
 
       if (role === 'farmer') {
-        userData.address = formData.farmLocation; // Fallback mapping
-        userData.farmDetails = {
-          location: formData.farmLocation,
+        submissionData.farmDetails = {
           farmingType: formData.farmingType,
-          experience: 1, // Defaulting for new users
-          description: formData.farmDescription || "A passionate local farmer."
+          location: formData.location,
+          experience: parseInt(formData.experience) || 0,
         };
+        submissionData.location = formData.location;
+        submissionData.address = formData.address;
       }
 
-      register(userData);
-      navigate(`/${role}/dashboard`, { replace: true });
+      const user = await register(submissionData);
+      if (user.role === 'farmer') navigate('/farmer/dashboard');
+      else navigate('/customer/dashboard');
     } catch (err) {
-      setError(err.message);
-      setIsLoading(false);
+      setError(err.message || 'Registration failed. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="bg-background min-h-[calc(100vh-4rem)] flex items-center justify-center p-4 py-12">
-      <div className="w-full max-w-xl bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden relative">
-        <div className="absolute top-0 left-0 w-full h-2 bg-primary"></div>
-        
-        <div className="p-8 sm:p-10">
-          <div className="text-center mb-10">
-            <h1 className="text-3xl font-black text-gray-900 tracking-tight uppercase">Join Community</h1>
-            <p className="text-gray-500 font-medium mt-2 text-sm">Create your Krishi Market account</p>
-          </div>
+    <div className="min-h-screen pt-24 pb-20 flex items-center justify-center relative overflow-hidden bg-background font-body selection:bg-primary/5">
+      {/* Dynamic Background Ambience */}
+      <div className="absolute top-0 right-1/2 translate-x-1/2 w-full max-w-6xl h-[800px] bg-primary/5 rounded-full blur-[140px] opacity-40 pointer-events-none"></div>
+      <div className="absolute top-0 left-0 w-[400px] h-[400px] bg-accent/5 rounded-full blur-[100px] opacity-20 pointer-events-none"></div>
+      
+      <div className="max-w-6xl w-full px-6 relative z-10">
+        <div className="grid lg:grid-cols-12 gap-16 items-center">
+          
+          {/* Brand/Information Panel - Left Side */}
+          <motion.div 
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+            className="lg:col-span-5 space-y-12 hidden lg:block"
+          >
+            <Link to="/" className="flex items-center gap-4 group">
+              <div className="w-14 h-14 bg-white border border-black/5 rounded-2xl flex items-center justify-center text-primary shadow-sm group-hover:bg-primary group-hover:text-white transition-all duration-700">
+                <Leaf className="w-7 h-7" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-3xl font-display font-bold text-primary tracking-tight uppercase">
+                  KRISHI<span className="text-accent italic ml-0.5">MITRA</span>
+                </span>
+                <span className="text-[8px] font-black text-text-dim uppercase tracking-[0.6em] mt-2 opacity-50">Account Creation</span>
+              </div>
+            </Link>
 
-          {/* Role Toggle */}
-          <div className="flex p-1 bg-gray-50 rounded-xl mb-8 border border-gray-100 relative">
-             <div 
-               className="absolute top-1 bottom-1 left-1 bg-white rounded-lg shadow-sm border border-gray-200 transition-all duration-300"
-               style={{ width: 'calc(50% - 4px)', transform: role === 'farmer' ? 'translateX(100%)' : 'translateX(0)' }}
-             ></div>
-             
-             <button 
-               type="button"
-               onClick={() => { setRole('customer'); setError(''); }}
-               className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-bold uppercase tracking-widest relative z-10 transition-colors ${role === 'customer' ? 'text-primary' : 'text-gray-400 hover:text-gray-600'}`}
-             >
-               <User className="w-4 h-4" /> Customer
-             </button>
-             
-             <button 
-               type="button"
-               onClick={() => { setRole('farmer'); setError(''); }}
-               className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-bold uppercase tracking-widest relative z-10 transition-colors ${role === 'farmer' ? 'text-primary' : 'text-gray-400 hover:text-gray-600'}`}
-             >
-               <Sprout className="w-4 h-4" /> Farmer
-             </button>
-          </div>
+            <AnimatePresence mode="wait">
+              <motion.div 
+                key={role}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.6 }}
+                className="space-y-8"
+              >
+                 <h2 className="text-6xl font-display font-bold text-primary leading-[0.95] uppercase tracking-tighter">
+                   {role === 'customer' ? 'Access The ' : 'Manage Your '}
+                   <span className="text-accent italic font-normal">{role === 'customer' ? 'Harvest' : 'Farm'}</span>
+                 </h2>
+                 <p className="text-base text-text-dim/70 leading-relaxed max-w-lg font-medium tracking-wide">
+                   {role === 'customer' 
+                    ? 'Join a community dedicated to accessing the highest quality organic products directly from the source.'
+                    : 'Join our network of verified farmers and share your high-quality harvest with our professional marketplace.'}
+                 </p>
+              </motion.div>
+            </AnimatePresence>
 
-          {error && (
-            <div className="bg-red-50 text-red-600 text-xs font-bold uppercase tracking-widest p-4 rounded-xl mb-6 border border-red-100 text-center animate-in fade-in slide-in-from-top-2">
-              {error}
+            <div className="space-y-6">
+               {[
+                 { icon: Star, label: 'Quality Control', val: 'Verified Purity' },
+                 { icon: Activity, label: 'Market Insights', val: 'Real-time Demand' }
+               ].map((item, i) => (
+                 <div key={i} className="flex gap-6 items-center p-6 rounded-3xl bg-white border border-black/[0.03] shadow-sm group hover:shadow-xl transition-all duration-700">
+                    <div className="w-12 h-12 rounded-xl bg-primary/5 flex items-center justify-center text-primary/30 group-hover:bg-primary group-hover:text-white transition-all duration-700">
+                       <item.icon className="w-5 h-5" />
+                    </div>
+                    <div>
+                       <p className="text-[9px] font-black text-text-dim/40 uppercase tracking-widest">{item.label}</p>
+                       <p className="text-lg font-display font-bold text-primary uppercase">{item.val}</p>
+                    </div>
+                 </div>
+               ))}
             </div>
-          )}
+          </motion.div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-1.5 md:col-span-2">
-                <label className="label-text">Full Name</label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input type="text" name="name" required className="input-field pl-10" placeholder="John Doe" value={formData.name} onChange={handleChange} />
+          {/* Registration Card - Right Side */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98, x: 20 }}
+            animate={{ opacity: 1, scale: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="lg:col-span-7 w-full"
+          >
+            <div className="card-premium !p-8 md:!p-12 shadow-2xl space-y-8 relative overflow-hidden border-white/60">
+              {/* Card Decoration */}
+              <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full blur-[80px] -mr-24 -mt-24 opacity-60"></div>
+              
+              <div className="text-center space-y-3 relative z-10">
+                <div className="inline-flex items-center gap-3 px-4 py-1 bg-accent/10 rounded-full border border-accent/20 mb-2">
+                   <Leaf className="w-3.5 h-3.5 text-accent" />
+                   <span className="text-[9px] font-black text-primary uppercase tracking-[0.4em]">Member Registration</span>
                 </div>
+                <h1 className="text-3xl font-display font-bold text-primary tracking-tight uppercase">
+                  Create <span className="text-accent italic font-normal">Account</span>
+                </h1>
+                <p className="text-[11px] text-text-dim/60 font-medium tracking-wide">Select your role and start your journey with us</p>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="label-text">Email Address</label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input type="email" name="email" required className="input-field pl-10" placeholder="john@example.com" value={formData.email} onChange={handleChange} />
-                </div>
+              {/* Role Selector - High Fidelity Tabs */}
+              <div className="flex bg-surface p-1.5 rounded-2xl border border-black/[0.03] relative z-10">
+                 <button 
+                   onClick={() => { setRole('customer'); setError(''); }}
+                   className={`flex-1 py-4 rounded-xl text-[10px] font-black uppercase tracking-[0.3em] transition-all duration-700 flex items-center justify-center gap-3 ${role === 'customer' ? 'bg-primary text-white shadow-xl' : 'text-text-dim/40 hover:text-primary'}`}
+                 >
+                    <User className="w-4 h-4" /> Consumer
+                 </button>
+                 <button 
+                   onClick={() => { setRole('farmer'); setError(''); }}
+                   className={`flex-1 py-4 rounded-xl text-[10px] font-black uppercase tracking-[0.3em] transition-all duration-700 flex items-center justify-center gap-3 ${role === 'farmer' ? 'bg-primary text-white shadow-xl' : 'text-text-dim/40 hover:text-primary'}`}
+                 >
+                    <ShieldCheck className="w-4 h-4" /> Guardian
+                 </button>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="label-text">Phone Number</label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input type="tel" name="phone" required className="input-field pl-10" placeholder="+91 98765 43210" value={formData.phone} onChange={handleChange} />
-                </div>
-              </div>
-
-              {/* Dynamic Farmer Fields */}
-              {role === 'farmer' && (
-                <>
-                  <div className="space-y-1.5 md:col-span-2 pt-4 border-t border-gray-50">
-                    <h3 className="text-sm font-black text-primary uppercase tracking-widest mb-4 flex items-center gap-2">
-                       <Sprout className="w-4 h-4" /> Farm Details
-                    </h3>
-                    <label className="label-text">Farm Location</label>
-                    <div className="relative">
-                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                      <input type="text" name="farmLocation" required={role === 'farmer'} className="input-field pl-10" placeholder="City, State" value={formData.farmLocation} onChange={handleChange} />
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5 md:col-span-2">
-                    <label className="label-text">Farming Type</label>
-                    <div className="relative">
-                      <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                      <select name="farmingType" className="input-field pl-10 appearance-none" value={formData.farmingType} onChange={handleChange}>
-                        <option value="Organic">100% Organic</option>
-                        <option value="Natural">Natural / Conventional</option>
-                        <option value="Hydroponic">Hydroponic</option>
-                      </select>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-1.5 md:col-span-2">
-                    <label className="label-text">Your Harvest Philosophy (Short Bio)</label>
-                    <textarea 
-                       name="farmDescription" 
-                       className="input-field h-20 py-3" 
-                       placeholder="Why do you grow what you grow?" 
-                       value={formData.farmDescription} 
-                       onChange={handleChange}
-                    ></textarea>
-                  </div>
-                </>
+              {error && (
+                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="p-4 bg-red-50 border border-red-100 rounded-xl text-red-600 text-[10px] font-bold text-center relative z-10">
+                  {error}
+                </motion.div>
               )}
 
-              <div className="space-y-1.5 pt-4 border-t border-gray-50 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-1.5">
-                  <label className="label-text">Password</label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input type="password" name="password" required className="input-field pl-10" placeholder="••••••••" value={formData.password} onChange={handleChange} />
+              <form onSubmit={handleSubmit} className="space-y-8 relative z-10">
+                <div className="grid grid-cols-1 gap-5">
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-1.5">
+                      <label className="text-[8px] font-black text-text-dim/60 uppercase tracking-widest ml-4">Full Name</label>
+                      <div className="relative group">
+                        <UserCircle className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-text-dim/20 group-focus-within:text-primary transition-all duration-500" />
+                        <input type="text" name="name" required className="input-premium !py-3.5 pl-14" placeholder="Full Name" value={formData.name} onChange={handleInputChange} />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[8px] font-black text-text-dim/60 uppercase tracking-widest ml-4">Phone Number</label>
+                      <div className="relative group">
+                        <Phone className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-text-dim/20 group-focus-within:text-primary transition-all duration-500" />
+                        <input type="tel" name="phone" required className="input-premium !py-3.5 pl-14" placeholder="+91 XXXXX XXXXX" value={formData.phone} onChange={handleInputChange} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[8px] font-black text-text-dim/60 uppercase tracking-widest ml-4">Email Address</label>
+                    <div className="relative group">
+                      <Mail className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-text-dim/20 group-focus-within:text-primary transition-all duration-500" />
+                      <input type="email" name="email" required className="input-premium !py-3.5 pl-14" placeholder="name@example.com" value={formData.email} onChange={handleInputChange} />
+                    </div>
+                  </div>
+
+                  {/* Dynamic Farmer Fields Architecture */}
+                  <AnimatePresence mode="wait">
+                    {role === 'farmer' && (
+                      <motion.div 
+                        key="farmer-pro-fields"
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="space-y-5 pt-4 border-t border-black/[0.03]"
+                      >
+                        <div className="grid md:grid-cols-2 gap-5">
+                          <div className="space-y-1.5">
+                            <label className="text-[8px] font-black text-text-dim/60 uppercase tracking-widest ml-4">Farming Category</label>
+                            <div className="relative group">
+                              <Sprout className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-text-dim/20 group-focus-within:text-primary transition-all duration-500" />
+                              <select name="farmingType" required className="input-premium !py-3.5 pl-14 appearance-none" value={formData.farmingType} onChange={handleInputChange}>
+                                <option value="">Select Category</option>
+                                <option value="Organic Grains">Organic Grains</option>
+                                <option value="Fruits & Orchards">Fruits & Orchards</option>
+                                <option value="Dairy & Livestock">Dairy & Livestock</option>
+                                <option value="Organic Fertilizers">Organic Fertilizers</option>
+                              </select>
+                            </div>
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-[8px] font-black text-text-dim/60 uppercase tracking-widest ml-4">Experience (Years)</label>
+                            <div className="relative group">
+                              <Briefcase className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-text-dim/20 group-focus-within:text-primary transition-all duration-500" />
+                              <input type="number" name="experience" required className="input-premium !py-3.5 pl-14" placeholder="Years" value={formData.experience} onChange={handleInputChange} />
+                            </div>
+                          </div>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[8px] font-black text-text-dim/60 uppercase tracking-widest ml-4">Farm Location</label>
+                          <div className="relative group">
+                            <Compass className="absolute left-6 top-5 w-4 h-4 text-text-dim/20 group-focus-within:text-primary transition-all duration-500" />
+                            <textarea name="location" required className="input-premium pl-14 h-20 resize-none pt-3" placeholder="Enter your farm address" value={formData.location} onChange={handleInputChange}></textarea>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  <div className="grid md:grid-cols-2 gap-5">
+                    <div className="space-y-1.5">
+                      <label className="text-[8px] font-black text-text-dim/60 uppercase tracking-widest ml-4">Password</label>
+                      <div className="relative group">
+                        <Lock className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-text-dim/20 group-focus-within:text-primary transition-all duration-500" />
+                        <input type="password" name="password" required className="input-premium !py-3.5 pl-14" placeholder="••••••••" value={formData.password} onChange={handleInputChange} />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[8px] font-black text-text-dim/60 uppercase tracking-widest ml-4">Confirm Password</label>
+                      <div className="relative group">
+                        <Lock className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-text-dim/20 group-focus-within:text-primary transition-all duration-500" />
+                        <input type="password" name="confirmPassword" required className="input-premium !py-3.5 pl-14" placeholder="••••••••" value={formData.confirmPassword} onChange={handleInputChange} />
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="label-text">Confirm Password</label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input type="password" name="confirmPassword" required className="input-field pl-10" placeholder="••••••••" value={formData.confirmPassword} onChange={handleChange} />
-                  </div>
-                </div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="btn-premium w-full !py-4 text-[11px] tracking-[0.5em] flex items-center justify-center gap-6 group disabled:opacity-50 relative overflow-hidden shadow-2xl"
+                >
+                  {loading ? (
+                    <div className="flex items-center gap-3">
+                      <Sparkles className="w-4 h-4 animate-spin text-accent" />
+                      <span>CREATING ACCOUNT...</span>
+                    </div>
+                  ) : (
+                    <>CREATE ACCOUNT <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-700" /></>
+                  )}
+                </button>
+              </form>
+
+              <div className="pt-8 border-t border-black/[0.03] text-center relative z-10">
+                <p className="text-[11px] text-text-dim/60 font-medium">
+                  Already have an account? 
+                  <Link to="/login" className="text-primary font-black ml-3 uppercase tracking-widest hover:text-accent transition-all duration-500 underline underline-offset-8 decoration-primary/10">
+                    Log In
+                  </Link>
+                </p>
               </div>
             </div>
-
-            <button 
-              type="submit" 
-              disabled={isLoading}
-              className="btn-primary w-full py-4 rounded-xl uppercase tracking-widest font-black shadow-xl shadow-primary/20 disabled:opacity-70 flex justify-center items-center gap-2 mt-8"
-            >
-              {isLoading ? 'Creating Account...' : <>Complete Registration <ArrowRight className="w-4 h-4" /></>}
-            </button>
-          </form>
-
-          <div className="mt-8 text-center border-t border-gray-50 pt-6">
-            <p className="text-sm font-bold text-gray-500">
-              Already have an account?{' '}
-              <Link to="/login" state={{ defaultRole: role }} className="text-primary hover:underline uppercase tracking-widest text-xs font-black">
-                Log In
-              </Link>
-            </p>
-          </div>
+          </motion.div>
         </div>
       </div>
     </div>

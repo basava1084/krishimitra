@@ -76,10 +76,11 @@ export const CartProvider = ({ children }) => {
   };
 
   const subtotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+  const cartTotal = subtotal;
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ cart, addToCart, removeFromCart, updateQuantity, clearCart, reorderItems, subtotal, cartCount }}>
+    <CartContext.Provider value={{ cart, addToCart, removeFromCart, updateQuantity, clearCart, reorderItems, subtotal, cartTotal, cartCount }}>
       {children}
       {toast && (
         <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-bottom duration-300">

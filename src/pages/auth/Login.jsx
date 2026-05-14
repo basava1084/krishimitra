@@ -1,130 +1,212 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Mail, Lock, User, Sprout, ArrowRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Mail, 
+  Lock, 
+  LogIn, 
+  ShieldCheck, 
+  Sparkles, 
+  ArrowRight, 
+  User, 
+  Leaf, 
+  Zap, 
+  Globe, 
+  Fingerprint,
+  Cpu
+} from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const Login = () => {
-  const [role, setRole] = useState('customer');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState('customer'); // customer or farmer
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  
+  const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  
-  // Default redirect path based on selected role
-  const from = location.state?.from?.pathname || `/${role}/dashboard`;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setIsLoading(true);
-
     try {
-      // Simulate slight network delay for realism
-      await new Promise(resolve => setTimeout(resolve, 600));
-      login(email, password, role);
+      setError('');
+      setLoading(true);
+      const user = await login(email, password, role);
+      const from = location.state?.from?.pathname || (user.role === 'farmer' ? '/farmer/dashboard' : '/customer/dashboard');
       navigate(from, { replace: true });
     } catch (err) {
-      setError(err.message);
-      setIsLoading(false);
+      setError(err.message || 'Login failed. Please check your credentials.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="bg-background min-h-[calc(100vh-4rem)] flex items-center justify-center p-4 py-12">
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden relative">
-        <div className="absolute top-0 left-0 w-full h-2 bg-primary"></div>
-        
-        <div className="p-8 sm:p-10">
-          <div className="text-center mb-10">
-            <h1 className="text-3xl font-black text-gray-900 tracking-tight uppercase">Welcome Back</h1>
-            <p className="text-gray-500 font-medium mt-2 text-sm">Log in to your Krishi Market account</p>
-          </div>
+    <div className="min-h-screen pt-24 pb-20 flex items-center justify-center relative overflow-hidden bg-background font-body selection:bg-primary/5">
+      {/* Dynamic Background Ambience */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-6xl h-[800px] bg-primary/5 rounded-full blur-[140px] opacity-40 pointer-events-none"></div>
+      <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-accent/5 rounded-full blur-[100px] opacity-30 pointer-events-none"></div>
+      
+      <div className="max-w-5xl w-full px-6 relative z-10">
+        <div className="grid lg:grid-cols-12 gap-12 items-center">
+          
+          {/* Brand/Emotional Panel - Left Side */}
+          <motion.div 
+            initial={{ opacity: 0, x: -40 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+            className="lg:col-span-7 space-y-12 hidden lg:block"
+          >
+            <Link to="/" className="flex items-center gap-4 group">
+              <div className="w-14 h-14 bg-white border border-black/5 rounded-2xl flex items-center justify-center text-primary shadow-sm group-hover:bg-primary group-hover:text-white transition-all duration-700">
+                <Leaf className="w-7 h-7" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-3xl font-display font-bold text-primary tracking-tight uppercase">
+                  KRISHI<span className="text-accent italic ml-0.5">MITRA</span>
+                </span>
+                <span className="text-[8px] font-black text-text-dim uppercase tracking-[0.6em] mt-2 opacity-50">Premium Agricultural Marketplace</span>
+              </div>
+            </Link>
 
-          {/* Role Toggle */}
-          <div className="flex p-1 bg-gray-50 rounded-xl mb-8 border border-gray-100 relative">
-             <div 
-               className="absolute top-1 bottom-1 left-1 bg-white rounded-lg shadow-sm border border-gray-200 transition-all duration-300"
-               style={{ width: 'calc(50% - 4px)', transform: role === 'farmer' ? 'translateX(100%)' : 'translateX(0)' }}
-             ></div>
-             
-             <button 
-               type="button"
-               onClick={() => { setRole('customer'); setError(''); }}
-               className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-bold uppercase tracking-widest relative z-10 transition-colors ${role === 'customer' ? 'text-primary' : 'text-gray-400 hover:text-gray-600'}`}
-             >
-               <User className="w-4 h-4" /> Customer
-             </button>
-             
-             <button 
-               type="button"
-               onClick={() => { setRole('farmer'); setError(''); }}
-               className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-bold uppercase tracking-widest relative z-10 transition-colors ${role === 'farmer' ? 'text-primary' : 'text-gray-400 hover:text-gray-600'}`}
-             >
-               <Sprout className="w-4 h-4" /> Farmer
-             </button>
-          </div>
-
-          {error && (
-            <div className="bg-red-50 text-red-600 text-xs font-bold uppercase tracking-widest p-4 rounded-xl mb-6 border border-red-100 text-center animate-in fade-in slide-in-from-top-2">
-              {error}
+            <div className="space-y-8">
+               <h2 className="text-6xl font-display font-bold text-primary leading-[0.95] uppercase tracking-tighter">
+                 Welcome <span className="text-accent italic font-normal">Back</span>
+               </h2>
+               <p className="text-base text-text-dim/70 leading-relaxed max-w-lg font-medium tracking-wide">
+                 Access your personalized management suite. Your gateway to the most professional organic marketplace.
+               </p>
             </div>
-          )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-1.5">
-              <label className="label-text">Email Address</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input 
-                  type="email" 
-                  required
-                  className="input-field pl-10" 
-                  placeholder="Enter your email" 
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
+            <div className="grid grid-cols-2 gap-8 pt-6">
+               {[
+                 { icon: Fingerprint, label: 'Secure Access', val: 'Protected' },
+                 { icon: Cpu, label: 'System Status', val: 'Online' }
+               ].map((item, i) => (
+                 <div key={i} className="p-6 rounded-3xl bg-white border border-black/[0.03] shadow-sm space-y-4">
+                    <item.icon className="w-6 h-6 text-accent" />
+                    <div>
+                       <p className="text-[9px] font-black text-text-dim/40 uppercase tracking-widest">{item.label}</p>
+                       <p className="text-lg font-display font-bold text-primary uppercase">{item.val}</p>
+                    </div>
+                 </div>
+               ))}
+            </div>
+          </motion.div>
+
+          {/* Authentication Card - Right Side */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98, x: 20 }}
+            animate={{ opacity: 1, scale: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="lg:col-span-5 w-full"
+          >
+            <div className="card-premium !p-8 md:!p-10 shadow-2xl space-y-8 relative overflow-hidden border-white/60">
+              {/* Card Decoration */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16"></div>
+              
+              <div className="text-center space-y-3 relative z-10">
+                <div className="inline-flex items-center gap-3 px-4 py-1 bg-primary/5 rounded-full border border-primary/10 mb-2">
+                   <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+                   <span className="text-[9px] font-black text-primary uppercase tracking-[0.4em]">Secure Login</span>
+                </div>
+                <h1 className="text-3xl font-display font-bold text-primary tracking-tight uppercase">
+                  Member <span className="text-accent italic font-normal">Access</span>
+                </h1>
+                <p className="text-[11px] text-text-dim/60 font-medium tracking-wide">Sign in to access your dashboard</p>
+              </div>
+
+              {/* Role Toggle - Sleek Design */}
+              <div className="flex bg-surface p-1 rounded-xl border border-black/[0.03] relative z-10">
+                <button
+                  type="button"
+                  onClick={() => setRole('customer')}
+                  className={`flex-1 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-500 flex items-center justify-center gap-2 ${role === 'customer' ? 'bg-primary text-white shadow-xl' : 'text-text-dim/40 hover:text-primary'}`}
+                >
+                  <User className="w-3.5 h-3.5" /> Consumer
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRole('farmer')}
+                  className={`flex-1 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-500 flex items-center justify-center gap-2 ${role === 'farmer' ? 'bg-primary text-white shadow-xl' : 'text-text-dim/40 hover:text-primary'}`}
+                >
+                  <ShieldCheck className="w-3.5 h-3.5" /> Farmer
+                </button>
+              </div>
+
+              {error && (
+                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-4 bg-red-50 border border-red-100 rounded-xl text-red-600 text-[10px] font-bold text-center relative z-10 shadow-sm">
+                  {error}
+                </motion.div>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-text-dim uppercase tracking-widest ml-4 opacity-60">Email Address</label>
+                  <div className="relative group">
+                    <Mail className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-text-dim/20 group-focus-within:text-primary transition-all duration-500" />
+                    <input
+                      type="email"
+                      required
+                      className="input-premium !py-4 pl-14"
+                      placeholder="name@nexus.ai"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center px-4">
+                    <label className="text-[9px] font-black text-text-dim uppercase tracking-widest opacity-60">Security Key</label>
+                    <button type="button" className="text-[9px] font-bold text-accent uppercase tracking-widest hover:text-primary transition-colors">Lost Key?</button>
+                  </div>
+                  <div className="relative group">
+                    <Lock className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-text-dim/20 group-focus-within:text-primary transition-all duration-500" />
+                    <input
+                      type="password"
+                      required
+                      className="input-premium !py-4 pl-14"
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="btn-premium w-full !py-5 text-[11px] tracking-[0.5em] flex items-center justify-center gap-5 group disabled:opacity-50 shadow-2xl relative overflow-hidden"
+                >
+                  {loading ? (
+                     <div className="flex items-center gap-3">
+                        <Sparkles className="w-4 h-4 animate-spin text-accent" />
+                        <span>SYNCHRONIZING...</span>
+                     </div>
+                  ) : (
+                    <>INITIATE SESSION <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-700" /></>
+                  )}
+                </button>
+              </form>
+
+              <div className="pt-8 border-t border-black/[0.03] text-center relative z-10">
+                <p className="text-[11px] text-text-dim/60 font-medium">
+                  New to the ecosystem? 
+                  <Link to="/register" className="text-primary font-black ml-3 uppercase tracking-widest hover:text-accent transition-all duration-500 underline underline-offset-8 decoration-primary/10">
+                    Register Node
+                  </Link>
+                </p>
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                 <label className="label-text">Password</label>
-                 <Link to="#" className="text-[10px] font-black text-primary hover:underline uppercase tracking-widest">Forgot?</Link>
-              </div>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input 
-                  type="password" 
-                  required
-                  className="input-field pl-10" 
-                  placeholder="Enter your password" 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
+            {/* Bottom Trust Indicators */}
+            <div className="mt-8 flex items-center justify-center gap-8 text-[9px] font-black text-text-dim/20 uppercase tracking-[0.4em]">
+               <div className="flex items-center gap-2"><Zap className="w-3 h-3" /> Latency: 4ms</div>
+               <div className="flex items-center gap-2"><ShieldCheck className="w-3 h-3" /> SSL Node</div>
             </div>
-
-            <button 
-              type="submit" 
-              disabled={isLoading}
-              className="btn-primary w-full py-4 rounded-xl uppercase tracking-widest font-black shadow-xl shadow-primary/20 disabled:opacity-70 flex justify-center items-center gap-2 mt-4"
-            >
-              {isLoading ? 'Authenticating...' : <>Log In Securely <ArrowRight className="w-4 h-4" /></>}
-            </button>
-          </form>
-
-          <div className="mt-8 text-center border-t border-gray-50 pt-6">
-            <p className="text-sm font-bold text-gray-500">
-              Don't have an account?{' '}
-              <Link to="/register" state={{ defaultRole: role }} className="text-primary hover:underline uppercase tracking-widest text-xs font-black">
-                Register here
-              </Link>
-            </p>
-          </div>
+          </motion.div>
         </div>
       </div>
     </div>

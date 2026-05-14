@@ -1,213 +1,304 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  ArrowLeft, 
-  MapPin, 
   CreditCard, 
   Truck, 
-  CheckCircle2, 
-  ShoppingBag,
-  ShieldCheck,
-  ChevronRight
+  ShieldCheck, 
+  ArrowLeft, 
+  MapPin, 
+  Phone, 
+  User,
+  Lock,
+  CheckCircle2,
+  ChevronDown,
+  Globe,
+  Wallet,
+  Smartphone
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
-import { useAuth } from '../context/AuthContext';
-import { useProducts } from '../context/ProductContext';
 import { useOrders } from '../context/OrderContext';
+import { useAuth } from '../context/AuthContext';
 
 const Checkout = () => {
-  const { cart, subtotal, clearCart } = useCart();
-  const { currentUser } = useAuth();
-  const { reduceStock } = useProducts();
+  const { cart, cartTotal, clearCart } = useCart();
   const { placeOrder } = useOrders();
+  const { currentUser } = useAuth();
   const navigate = useNavigate();
-  const [step, setStep] = useState(1);
-  const [isSuccess, setIsSuccess] = useState(false);
+  const [activeStep, setActiveStep] = useState(2); // Start at Delivery Address since logged in
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const [formData, setFormData] = useState({
-    fullName: currentUser?.name || '',
-    email: currentUser?.email || '',
+    name: currentUser?.name || '',
     phone: currentUser?.phone || '',
-    address: currentUser?.address || '',
+    pincode: '',
+    locality: '',
+    address: '',
     city: '',
-    zip: '',
-    paymentMethod: 'cod'
+    state: '',
+    landmark: '',
+    alternatePhone: '',
+    paymentMethod: 'upi'
   });
 
-  const handlePlaceOrder = () => {
-    // 1. Create the order object according to global model
-    const orderItems = cart.map(item => ({
-      productId: item.id,
-      name: item.name,
-      quantity: item.quantity,
-      price: item.price,
-      farmerId: item.farmerId || 'F-101' // Fallback for consistency
-    }));
-
-    const orderData = {
-      customerId: currentUser.id,
-      items: orderItems,
-      totalAmount: subtotal,
-      deliveryAddress: `${formData.address}, ${formData.city} - ${formData.zip}`,
-      deliverySlot: 'Morning (8 AM - 12 PM)',
-    };
-
-    // 2. Place order in context
-    placeOrder(orderData);
-
-    // 3. Reduce stock for each product
-    cart.forEach(item => {
-      reduceStock(item.id, item.quantity);
-    });
-
-    setIsSuccess(true);
-    
-    setTimeout(() => {
-      clearCart();
-      navigate('/customer/dashboard');
-    }, 3000);
+  const handleInputChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  if (isSuccess) {
-    return (
-      <div className="bg-background min-h-screen flex flex-col items-center justify-center py-20 px-4 animate-in fade-in duration-500">
-         <div className="w-24 h-24 bg-primary rounded-full flex items-center justify-center shadow-2xl shadow-primary/30 mb-10 scale-110">
-            <CheckCircle2 className="w-12 h-12 text-white animate-pulse" />
-         </div>
-         <h2 className="text-4xl font-black text-gray-900 tracking-tight mb-4 uppercase">Harvest Ordered!</h2>
-         <p className="text-gray-500 font-medium mb-10 text-center max-w-sm leading-relaxed">Thank you, {currentUser?.name}. Your order has been placed and stock has been reserved.</p>
-         <div className="flex items-center gap-2 text-xs font-black text-primary uppercase tracking-widest bg-primary/10 px-6 py-3 rounded-full">
-            <Truck className="w-4 h-4 animate-bounce" /> Shipping to Your Location
-         </div>
-      </div>
-    );
-  }
+  const handleCheckout = async (e) => {
+    if (e) e.preventDefault();
+    setIsProcessing(true);
+
+    try {
+      // Simulate payment processing
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const order = {
+        items: cart,
+        total: cartTotal,
+        shippingDetails: formData,
+        status: 'Confirmed',
+        orderDate: new Date().toISOString()
+      };
+      
+      placeOrder(order);
+      clearCart();
+      navigate('/customer/dashboard');
+    } catch (error) {
+      console.error(error);
+      setIsProcessing(false);
+    }
+  };
+
+  const deliveryCharges = cartTotal > 500 ? 0 : 40;
+  const totalAmount = cartTotal + deliveryCharges;
+
+  const StepHeader = ({ num, title, subtitle, isActive, isCompleted, onEdit }) => (
+    <div className={`p-4 flex items-center justify-between border-b border-black/5 ${isActive ? 'bg-primary text-white' : 'bg-white'}`}>
+       <div className="flex items-center gap-4">
+          <div className={`w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold ${isActive ? 'bg-white text-primary' : 'bg-surface text-primary'}`}>
+             {isCompleted ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : num}
+          </div>
+          <div>
+             <h3 className={`text-sm font-bold uppercase tracking-wider ${isActive ? 'text-white' : 'text-text-dim'}`}>{title}</h3>
+             {isCompleted && !isActive && <p className="text-xs font-medium text-primary mt-0.5">{subtitle}</p>}
+          </div>
+       </div>
+       {!isActive && isCompleted && (
+         <button onClick={onEdit} className="px-4 py-2 border border-black/10 rounded text-[10px] font-bold text-primary uppercase hover:bg-surface transition-all">
+            Change
+         </button>
+       )}
+    </div>
+  );
 
   return (
-    <div className="bg-background min-h-screen py-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <button onClick={() => navigate('/cart')} className="flex items-center gap-2 text-sm font-bold text-gray-400 hover:text-primary transition-colors mb-12">
-          <ArrowLeft className="w-4 h-4" /> Back to Basket
-        </button>
+    <div className="bg-[#f1f3f6] min-h-screen pt-32 pb-24 font-body text-text-main">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="flex flex-col lg:flex-row gap-6">
+          
+          {/* Left Column: Stepped Checkout */}
+          <div className="flex-1 space-y-4">
+            
+            {/* Step 1: Login */}
+            <div className="bg-white shadow-sm rounded-sm overflow-hidden">
+               <StepHeader 
+                  num="1" 
+                  title="Login" 
+                  subtitle={`${currentUser?.name} | ${currentUser?.phone || '+91 7411278970'}`} 
+                  isCompleted={true} 
+                  isActive={activeStep === 1}
+                  onEdit={() => setActiveStep(1)}
+               />
+               <AnimatePresence>
+                  {activeStep === 1 && (
+                     <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="p-6">
+                        <div className="flex justify-between items-center">
+                           <div>
+                              <p className="text-sm font-bold text-primary">{currentUser?.name}</p>
+                              <p className="text-xs text-text-dim">{currentUser?.email}</p>
+                           </div>
+                           <button onClick={() => setActiveStep(2)} className="bg-[#fb641b] text-white px-8 py-2.5 rounded-sm text-xs font-bold uppercase shadow-md">Continue Checkout</button>
+                        </div>
+                     </motion.div>
+                  )}
+               </AnimatePresence>
+            </div>
 
-        <div className="grid lg:grid-cols-3 gap-16">
-           <div className="lg:col-span-2 space-y-12">
-              <div className="flex justify-between relative">
-                 <div className="absolute top-1/2 left-0 w-full h-0.5 bg-gray-100 -translate-y-1/2 -z-10"></div>
-                 <div className={`absolute top-1/2 left-0 h-0.5 bg-primary -translate-y-1/2 -z-10 transition-all duration-500 ${step === 1 ? 'w-0' : step === 2 ? 'w-1/2' : 'w-full'}`}></div>
-                 {[
-                   { s: 1, l: 'Shipping', icon: MapPin },
-                   { s: 2, l: 'Payment', icon: CreditCard },
-                   { s: 3, l: 'Review', icon: ShoppingBag }
-                 ].map((item) => (
-                   <div key={item.s} className="flex flex-col items-center gap-3 bg-background px-4">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${step >= item.s ? 'bg-primary text-white shadow-lg' : 'bg-white border border-gray-100 text-gray-300'}`}>
-                         <item.icon className="w-5 h-5" />
-                      </div>
-                      <span className={`text-[10px] font-black uppercase tracking-widest ${step >= item.s ? 'text-gray-900' : 'text-gray-300'}`}>{item.l}</span>
-                   </div>
-                 ))}
-              </div>
+            {/* Step 2: Delivery Address */}
+            <div className="bg-white shadow-sm rounded-sm overflow-hidden">
+               <StepHeader 
+                  num="2" 
+                  title="Delivery Address" 
+                  subtitle={formData.address ? `${formData.name}, ${formData.address.slice(0, 30)}...` : ''}
+                  isCompleted={activeStep > 2} 
+                  isActive={activeStep === 2}
+                  onEdit={() => setActiveStep(2)}
+               />
+               <AnimatePresence>
+                  {activeStep === 2 && (
+                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-8 bg-surface/30">
+                        <form className="space-y-6 max-w-2xl">
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <input type="text" name="name" placeholder="Name" className="bg-white border border-black/10 px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary" value={formData.name} onChange={handleInputChange} />
+                              <input type="text" name="phone" placeholder="10-digit mobile number" className="bg-white border border-black/10 px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary" value={formData.phone} onChange={handleInputChange} />
+                           </div>
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <input type="text" name="pincode" placeholder="Pincode" className="bg-white border border-black/10 px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary" value={formData.pincode} onChange={handleInputChange} />
+                              <input type="text" name="locality" placeholder="Locality" className="bg-white border border-black/10 px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary" value={formData.locality} onChange={handleInputChange} />
+                           </div>
+                           <textarea name="address" placeholder="Address (Area and Street)" className="w-full bg-white border border-black/10 px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary h-24 resize-none" value={formData.address} onChange={handleInputChange}></textarea>
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <input type="text" name="city" placeholder="City/District/Town" className="bg-white border border-black/10 px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary" value={formData.city} onChange={handleInputChange} />
+                              <select name="state" className="bg-white border border-black/10 px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary" value={formData.state} onChange={handleInputChange}>
+                                 <option value="">--Select State--</option>
+                                 <option value="Karnataka">Karnataka</option>
+                                 <option value="Maharashtra">Maharashtra</option>
+                              </select>
+                           </div>
+                           <button 
+                             type="button"
+                             onClick={() => setActiveStep(3)}
+                             className="bg-[#fb641b] text-white px-12 py-4 rounded-sm font-bold uppercase shadow-lg hover:bg-[#e65a16] transition-all"
+                           >
+                             Save and Deliver Here
+                           </button>
+                        </form>
+                     </motion.div>
+                  )}
+               </AnimatePresence>
+            </div>
 
-              <div className="bg-white rounded-2xl border border-gray-200 p-10 shadow-sm">
-                 {step === 1 && (
-                    <div className="space-y-8">
-                       <h2 className="text-2xl font-black text-gray-900 tracking-tight uppercase">Delivery Details</h2>
-                       <div className="grid sm:grid-cols-2 gap-6">
-                          <div className="space-y-1.5 sm:col-span-2">
-                             <label className="label-text">Full Name</label>
-                             <input type="text" className="input-field" value={formData.fullName} onChange={(e) => setFormData({...formData, fullName: e.target.value})} />
-                          </div>
-                          <div className="sm:col-span-2 space-y-1.5">
-                             <label className="label-text">Delivery Address</label>
-                             <textarea className="input-field h-24" value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})}></textarea>
-                          </div>
-                          <div className="space-y-1.5">
-                             <label className="label-text">City</label>
-                             <input type="text" className="input-field" value={formData.city} onChange={(e) => setFormData({...formData, city: e.target.value})} />
-                          </div>
-                          <div className="space-y-1.5">
-                             <label className="label-text">ZIP Code</label>
-                             <input type="text" className="input-field" value={formData.zip} onChange={(e) => setFormData({...formData, zip: e.target.value})} />
-                          </div>
-                       </div>
-                       <button onClick={() => setStep(2)} className="btn-primary w-full py-5 rounded-xl uppercase tracking-widest font-black">
-                          Continue to Payment <ChevronRight className="w-5 h-5" />
-                       </button>
-                    </div>
-                 )}
+            {/* Step 3: Order Summary */}
+            <div className="bg-white shadow-sm rounded-sm overflow-hidden">
+               <StepHeader 
+                  num="3" 
+                  title="Order Summary" 
+                  subtitle={`${cart.length} Item${cart.length > 1 ? 's' : ''}`}
+                  isCompleted={activeStep > 3} 
+                  isActive={activeStep === 3}
+                  onEdit={() => setActiveStep(3)}
+               />
+               <AnimatePresence>
+                  {activeStep === 3 && (
+                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-0">
+                        {cart.map(item => (
+                           <div key={item.id} className="p-6 flex gap-6 border-b border-black/5 hover:bg-surface/10 transition-colors">
+                              <div className="w-20 h-20 border border-black/5 p-1 shrink-0 bg-white">
+                                 <img src={item.image} className="w-full h-full object-contain" />
+                              </div>
+                              <div className="space-y-1">
+                                 <h4 className="text-sm font-bold text-primary">{item.name}</h4>
+                                 <p className="text-xs text-text-dim">Seller: {item.sellerName || 'Local Farmer'}</p>
+                                 <p className="text-base font-bold text-primary mt-2">₹{item.price * item.quantity}</p>
+                              </div>
+                           </div>
+                        ))}
+                        <div className="p-6 flex items-center justify-between bg-white sticky bottom-0 border-t border-black/5 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
+                           <p className="text-xs font-bold text-text-dim">Order confirmation email will be sent to <span className="text-primary">{currentUser?.email}</span></p>
+                           <button onClick={() => setActiveStep(4)} className="bg-[#fb641b] text-white px-12 py-3 rounded-sm font-bold uppercase shadow-md">Continue</button>
+                        </div>
+                     </motion.div>
+                  )}
+               </AnimatePresence>
+            </div>
 
-                 {step === 2 && (
-                    <div className="space-y-10">
-                       <h2 className="text-2xl font-black text-gray-900 tracking-tight uppercase">Payment Method</h2>
-                       <div className="p-6 rounded-2xl border-2 border-primary bg-primary/5 flex items-center justify-between">
-                          <div className="flex items-center gap-4">
-                             <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-primary">
-                                <Truck className="w-6 h-6" />
-                             </div>
-                             <div>
-                                <p className="font-black text-gray-900 uppercase text-sm tracking-tight">Cash on Delivery</p>
-                                <p className="text-xs text-gray-500 font-medium">Safe & contactless delivery payment</p>
-                             </div>
-                          </div>
-                          <div className="w-6 h-6 rounded-full border-2 border-primary flex items-center justify-center">
-                             <div className="w-3 h-3 bg-primary rounded-full"></div>
-                          </div>
-                       </div>
-                       <div className="flex gap-4">
-                          <button onClick={() => setStep(1)} className="btn-secondary flex-1 py-5 rounded-xl uppercase tracking-widest">Back</button>
-                          <button onClick={() => setStep(3)} className="btn-primary flex-[2] py-5 rounded-xl uppercase tracking-widest">Review Order</button>
-                       </div>
-                    </div>
-                 )}
+            {/* Step 4: Payment Options */}
+            <div className="bg-white shadow-sm rounded-sm overflow-hidden">
+               <StepHeader 
+                  num="4" 
+                  title="Payment Options" 
+                  isCompleted={activeStep > 4} 
+                  isActive={activeStep === 4}
+               />
+               <AnimatePresence>
+                  {activeStep === 4 && (
+                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-8 space-y-6">
+                        {[
+                           { id: 'upi', label: 'UPI (PhonePe, Google Pay, BHIM)', icon: Globe },
+                           { id: 'wallet', label: 'Wallets', icon: Wallet },
+                           { id: 'card', label: 'Credit / Debit / ATM Card', icon: CreditCard },
+                           { id: 'cod', label: 'Cash on Delivery', icon: Smartphone },
+                        ].map((method) => (
+                           <label key={method.id} className="flex items-start gap-4 p-4 border border-black/5 rounded cursor-pointer hover:bg-surface/30 transition-all group">
+                              <input 
+                                type="radio" 
+                                name="paymentMethod" 
+                                className="mt-1.5 w-4 h-4 accent-primary" 
+                                checked={formData.paymentMethod === method.id}
+                                onChange={() => setFormData({...formData, paymentMethod: method.id})}
+                              />
+                              <div className="flex-1">
+                                 <div className="flex items-center gap-3">
+                                    <method.icon className="w-5 h-5 text-text-dim group-hover:text-primary" />
+                                    <span className="text-sm font-bold text-primary">{method.label}</span>
+                                 </div>
+                                 {formData.paymentMethod === method.id && method.id === 'card' && (
+                                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="pt-6 space-y-4 max-w-sm">
+                                       <input type="text" placeholder="Card Number" className="w-full border border-black/10 p-3 text-sm focus:outline-none" />
+                                       <div className="grid grid-cols-2 gap-4">
+                                          <input type="text" placeholder="MM/YY" className="border border-black/10 p-3 text-sm focus:outline-none" />
+                                          <input type="password" placeholder="CVV" className="border border-black/10 p-3 text-sm focus:outline-none" />
+                                       </div>
+                                       <button onClick={handleCheckout} className="w-full bg-[#fb641b] text-white py-3 rounded-sm font-bold uppercase shadow-md">Pay ₹{totalAmount}</button>
+                                    </motion.div>
+                                 )}
+                                 {formData.paymentMethod === method.id && method.id !== 'card' && (
+                                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="pt-4">
+                                       <button onClick={handleCheckout} className="bg-[#fb641b] text-white px-12 py-3 rounded-sm font-bold uppercase shadow-md">
+                                          {isProcessing ? 'Processing...' : `Pay ₹${totalAmount}`}
+                                       </button>
+                                    </motion.div>
+                                 )}
+                              </div>
+                           </label>
+                        ))}
+                     </motion.div>
+                  )}
+               </AnimatePresence>
+            </div>
 
-                 {step === 3 && (
-                    <div className="space-y-10">
-                       <h2 className="text-2xl font-black text-gray-900 tracking-tight uppercase">Final Review</h2>
-                       <div className="bg-gray-50 p-6 rounded-2xl space-y-4">
-                          <div className="flex items-center gap-4 border-b border-gray-100 pb-4">
-                             <MapPin className="text-primary w-5 h-5" />
-                             <p className="text-sm font-bold text-gray-700">{formData.address}, {formData.city}</p>
-                          </div>
-                          <div className="flex items-center gap-4">
-                             <ShieldCheck className="text-primary w-5 h-5" />
-                             <p className="text-sm font-bold text-gray-700">Guaranteed Fresh Delivery within 24h</p>
-                          </div>
-                       </div>
-                       <div className="flex gap-4">
-                          <button onClick={() => setStep(2)} className="btn-secondary flex-1 py-5 rounded-xl uppercase tracking-widest">Back</button>
-                          <button onClick={handlePlaceOrder} className="btn-primary flex-[2] py-5 rounded-xl uppercase tracking-widest font-black">
-                             Place Order Now
-                          </button>
-                       </div>
-                    </div>
-                 )}
-              </div>
-           </div>
+          </div>
 
-           <div className="space-y-8">
-              <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm space-y-8 sticky top-28">
-                 <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest border-b border-gray-50 pb-4">Order Breakdown</h3>
-                 <div className="max-h-[300px] overflow-y-auto space-y-6">
-                    {cart.map((item) => (
-                       <div key={item.id} className="flex items-center gap-4">
-                          <div className="w-14 h-14 rounded-lg overflow-hidden border border-gray-100">
-                             <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                             <p className="text-sm font-bold text-gray-900 truncate">{item.name}</p>
-                             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{item.quantity} {item.unit} x ₹{item.price}</p>
-                          </div>
-                          <p className="font-black text-gray-900 text-sm">₹{item.price * item.quantity}</p>
-                       </div>
-                    ))}
-                 </div>
-                 <div className="pt-8 border-t border-gray-50 flex justify-between items-end">
-                    <span className="text-base font-black text-gray-900 uppercase tracking-widest">Total</span>
-                    <span className="text-3xl font-black text-primary tracking-tighter">₹{subtotal}</span>
-                 </div>
-              </div>
-           </div>
+          {/* Right Column: Price Details */}
+          <div className="w-full lg:w-[380px] space-y-4">
+               <div className="bg-white shadow-sm rounded-sm overflow-hidden sticky top-32">
+                  <div className="px-6 py-4 border-b border-black/5">
+                     <h3 className="text-sm font-bold text-text-dim uppercase tracking-wider">Price Details</h3>
+                  </div>
+                  <div className="p-6 space-y-5">
+                     <div className="flex justify-between items-center text-base">
+                        <span>Price ({cart.length} items)</span>
+                        <span>₹{cartTotal}</span>
+                     </div>
+                     <div className="flex justify-between items-center text-base">
+                        <span>Discount</span>
+                        <span className="text-emerald-600">- ₹0</span>
+                     </div>
+                     <div className="flex justify-between items-center text-base border-b border-dashed border-black/10 pb-5">
+                        <span>Delivery Charges</span>
+                        <span className={deliveryCharges === 0 ? 'text-emerald-600' : ''}>
+                           {deliveryCharges === 0 ? 'FREE' : `₹${deliveryCharges}`}
+                        </span>
+                     </div>
+                     <div className="flex justify-between items-center text-lg font-bold border-b border-dashed border-black/10 pb-5">
+                        <span>Total Payable</span>
+                        <span>₹{totalAmount}</span>
+                     </div>
+                     <p className="text-emerald-600 text-sm font-bold">
+                        Your total saving on this order is ₹0
+                     </p>
+                  </div>
+               </div>
+
+               <div className="flex items-center gap-3 text-text-dim px-2">
+                  <ShieldCheck className="w-8 h-8 opacity-40" />
+                  <p className="text-xs font-bold leading-tight uppercase tracking-wider opacity-60">
+                     Safe and Secure Payments. 100% Authentic products.
+                  </p>
+               </div>
+            </div>
+
         </div>
       </div>
     </div>

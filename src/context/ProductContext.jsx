@@ -7,18 +7,23 @@ export const useProducts = () => useContext(ProductContext);
 
 export const ProductProvider = ({ children }) => {
   const [products, setProducts] = useState(() => {
-    const saved = localStorage.getItem('km_products_v3');
-    return saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
+    const saved = localStorage.getItem('km_products_v11');
+    return saved ? JSON.parse(saved) : [];
   });
 
   useEffect(() => {
-    localStorage.setItem('km_products_v3', JSON.stringify(products));
+    localStorage.setItem('km_products_v11', JSON.stringify(products));
   }, [products]);
 
   const addProduct = (productData, user) => {
+    if (!user || !user.id) {
+      console.error('Cannot add product: User context missing');
+      return;
+    }
     const newProduct = {
       ...productData,
       id: 'P-' + Date.now(),
+      farmerId: user.id,
       createdBy: user.id,
       createdByRole: user.role,
       sellerName: user.name,
